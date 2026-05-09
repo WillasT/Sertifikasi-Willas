@@ -15,6 +15,11 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    @if (Auth::user()->account_type === 'admin')
+                        <x-nav-link :href="route('borrowers.index')" :active="request()->routeIs('borrowers.*')">
+                            {{ __('Borrowers') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -70,6 +75,11 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if (Auth::user()->account_type === 'admin')
+                <x-responsive-nav-link :href="route('borrowers.index')" :active="request()->routeIs('borrowers.*')">
+                    {{ __('Borrowers') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
