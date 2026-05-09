@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['user_id', 'room_id', 'submission_date', 'usage_date', 'duration_hours', 'status', 'actual_return_time', 'purpose'])]
+#[Fillable(['user_id','room_id','submission_date','usage_date','duration_hours','purpose','status','returned_at'])]
 class Reservation extends Model
 {
     public function user(): BelongsTo
@@ -25,5 +25,13 @@ class Reservation extends Model
         return $this->belongsToMany(Equipment::class)
                     ->using(EquipmentReservation::class)
                     ->withTimestamps();
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'usage_date' => 'datetime',
+            'returned_at' => 'datetime', // <-- NEW
+        ];
     }
 }

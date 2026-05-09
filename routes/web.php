@@ -6,7 +6,8 @@ use App\Http\Controllers\BorrowerController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\EquipmentController;
-
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -19,6 +20,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
+    Route::get('/reservations/create', [ReservationController::class, 'create'])->name('reservations.create');
+    Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+    Route::get('/reservations/check-equipment', [ReservationController::class, 'checkAvailableEquipment']);
+    Route::get('/reservations/booked-times', [ReservationController::class, 'getBookedTimes']);
+
+    Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])->name('reservations.edit');
+    Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('reservations.update');
 });
 
 Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
@@ -31,6 +41,11 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
 
     Route::resource('rooms', RoomController::class)->except('show');
     Route::resource('equipments', EquipmentController::class)->except('show');
+
+    Route::get('/admin/reservations', [AdminReservationController::class, 'index'])->name('admin.reservations.index');
+    Route::patch('/admin/reservations/{reservation}/approve', [AdminReservationController::class, 'approve'])->name('admin.reservations.approve');
+    Route::patch('/admin/reservations/{reservation}/reject', [AdminReservationController::class, 'reject'])->name('admin.reservations.reject');
+    Route::patch('/admin/reservations/{reservation}/done', [AdminReservationController::class, 'markAsDone'])->name('admin.reservations.done');
 });
 
 require __DIR__.'/auth.php';

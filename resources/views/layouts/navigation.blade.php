@@ -15,7 +15,13 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
+                        {{ __('My Reservations') }}
+                    </x-nav-link>
                     @if (Auth::user()->account_type === 'admin')
+                        <x-nav-link :href="route('admin.reservations.index')" :active="request()->routeIs('admin.reservations.*')">
+                            {{ __('Approvals') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('borrowers.index')" :active="request()->routeIs('borrowers.*')">
                             {{ __('Borrowers') }}
                         </x-nav-link>
