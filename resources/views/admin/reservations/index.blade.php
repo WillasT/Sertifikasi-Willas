@@ -1,6 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Admin Approval Dashboard</h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Admin Approval Dashboard
+            </h2>
+
+            <div class="flex space-x-3">
+                <a href="{{ route('admin.reservations.export.excel') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow text-sm transition">
+                    Export Excel
+                </a>
+                <a href="{{ route('admin.reservations.export.pdf') }}" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow text-sm transition">
+                    Export PDF
+                </a>
+            </div>
+        </div>
     </x-slot>
 
     <div class="py-12">
@@ -47,8 +60,10 @@
                                 </td>
 
                                 <td class="p-3">
-                                    <div class="font-bold">{{ $reservation->room->building }} (Fl {{ $reservation->room->floor }})</div>
-                                    <div class="text-sm text-gray-600 italic">"{{ $reservation->purpose }}"</div>
+                                    <div class="font-bold text-md">{{ $reservation->room->name }}</div>
+                                    <div class="text-xs text-gray-500">{{ $reservation->room->building }} (Floor {{ $reservation->room->floor }})</div>
+
+                                    <div class="text-sm text-gray-600 italic mt-1">"{{ $reservation->purpose }}"</div>
                                 </td>
 
                                 <td class="p-3">

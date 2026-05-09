@@ -43,6 +43,8 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
     Route::resource('equipments', EquipmentController::class)->except('show');
 
     Route::get('/admin/reservations', [AdminReservationController::class, 'index'])->name('admin.reservations.index');
+    Route::get('/admin/reservations/export/excel', [AdminReservationController::class, 'exportExcel'])->name('admin.reservations.export.excel');
+    Route::get('/admin/reservations/export/pdf', [AdminReservationController::class, 'exportPdf'])->name('admin.reservations.export.pdf');
     Route::patch('/admin/reservations/{reservation}/approve', [AdminReservationController::class, 'approve'])->name('admin.reservations.approve');
     Route::patch('/admin/reservations/{reservation}/reject', [AdminReservationController::class, 'reject'])->name('admin.reservations.reject');
     Route::patch('/admin/reservations/{reservation}/done', [AdminReservationController::class, 'markAsDone'])->name('admin.reservations.done');

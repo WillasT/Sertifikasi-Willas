@@ -30,6 +30,7 @@ class RoomController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'name' => 'required|string|max:255',
             'building' => 'required|string|max:255',
             'floor' => 'required|string|max:50',
             'capacity' => 'required|integer|min:1',
@@ -62,6 +63,7 @@ class RoomController extends Controller
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
+            'name' => 'required|string|max:255',
             'building' => 'required|string|max:255',
             'floor' => 'required|string|max:50',
             'capacity' => 'required|integer|min:1',

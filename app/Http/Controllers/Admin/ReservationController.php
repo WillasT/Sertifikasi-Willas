@@ -7,6 +7,9 @@ use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Exports\ReservationsExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReservationController extends Controller
 {
@@ -99,5 +102,21 @@ class ReservationController extends Controller
         ]);
 
         return back()->with('status', 'Reservation marked as completed and items returned!');
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(new ReservationsExport, 'reservations_report.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $reservations = \App\Models\Reservation::with(['user', 'room'])->latest()->get();
+
+        // DomPDF renders an HTML blade view into a PDF document
+        $pdf = Pdf::loadView('admin.reservations.pdf', compact('reservations'))
+                  ->setPaper('a4', 'landscape'); // Landscape is better for wide tables
+
+        return $pdf->download('reservations_report.pdf');
     }
 }

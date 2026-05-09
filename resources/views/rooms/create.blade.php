@@ -11,6 +11,11 @@
 
                 <form method="POST" action="{{ route('rooms.store') }}">
                     @csrf
+                    <div class="mb-4">
+                        <x-input-label for="name" :value="__('Room Name (e.g. Auditorium)')" />
+                        <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name', $room->name ?? '')" required autofocus />
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    </div>
 
                     <div>
                         <x-input-label for="building" :value="__('Building Name')" />

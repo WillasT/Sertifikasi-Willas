@@ -13,6 +13,11 @@
                     @csrf
                     @method('PUT')
 
+                    <div class="mb-4">
+                        <x-input-label for="name" :value="__('Room Name (e.g. Auditorium)')" />
+                        <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name', $room->name ?? '')" required autofocus />
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    </div>
                     <div>
                         <x-input-label for="building" :value="__('Building Name')" />
                         <x-text-input id="building" class="block mt-1 w-full" type="text" name="building" :value="old('building', $room->building)" required autofocus />

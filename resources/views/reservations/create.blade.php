@@ -35,7 +35,7 @@
                             <option value="">-- Choose a Room --</option>
                             @foreach ($rooms as $room)
                                 <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                                    {{ $room->building }} - Floor {{ $room->floor }} (Capacity: {{ $room->capacity }})
+                                    {{ $room->name }} ({{ $room->building }}, Floor {{ $room->floor }} - Cap: {{ $room->capacity }})
                                 </option>
                             @endforeach
                         </select>

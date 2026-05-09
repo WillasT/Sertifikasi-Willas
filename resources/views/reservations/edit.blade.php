@@ -50,8 +50,8 @@
                         <x-input-label for="room_id" :value="__('Select Room')" />
                         <select id="room_id" name="room_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                             @foreach ($rooms as $room)
-                                <option value="{{ $room->id }}" {{ old('room_id', $reservation->room_id) == $room->id ? 'selected' : '' }}>
-                                    {{ $room->building }} - Floor {{ $room->floor }} (Capacity: {{ $room->capacity }})
+                                <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                                    {{ $room->name }} ({{ $room->building }}, Floor {{ $room->floor }} - Cap: {{ $room->capacity }})
                                 </option>
                             @endforeach
                         </select>

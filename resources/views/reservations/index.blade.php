@@ -24,7 +24,14 @@
                                 ({{ $reservation->duration_hours }} hours)
                             </span>
                         </td>
-                        <td class="p-3">{{ $reservation->room->building }} (Fl {{ $reservation->room->floor }})</td>
+                        <td class="p-3">
+                            <div class="font-bold text-md text-gray-800">
+                                {{ $reservation->room->name }}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-0.5">
+                                {{ $reservation->room->building }} (Floor {{ $reservation->room->floor }})
+                            </div>
+                        </td>
                         <td class="p-3">{{ $reservation->purpose }}</td>
                         <td class="p-3">
                             <span class="px-2 py-1 rounded text-xs font-bold uppercase

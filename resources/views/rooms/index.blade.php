@@ -10,21 +10,36 @@
         @if (session('status')) <div class="mb-4 text-green-600 bg-green-100 p-4 rounded-lg">{{ session('status') }}</div> @endif
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg"><div class="p-6 text-gray-900 overflow-x-auto">
             <table class="w-full text-left border-collapse">
-                <thead><tr class="border-b-2 border-gray-200 bg-gray-50">
-                    <th class="p-3">Building & Floor</th><th class="p-3">Capacity</th><th class="p-3">Status</th><th class="p-3">Actions</th>
-                </tr></thead>
+                <thead>
+                    <tr class="border-b-2 border-gray-200 bg-gray-50 text-sm text-left">
+                        <th class="p-3">Room Name</th> <th class="p-3">Location</th>
+                        <th class="p-3 text-center">Capacity</th>
+                        <th class="p-3 text-center">Status</th>
+                        <th class="p-3 text-center">Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
                     @foreach ($rooms as $room)
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="p-3 font-bold">{{ $room->building }} <br> <span class="text-sm font-normal text-gray-500">Floor {{ $room->floor }}</span></td>
-                        <td class="p-3">{{ $room->capacity }}</td>
-                        <td class="p-3 capitalize">{{ $room->availability_status }}</td>
-                        <td class="p-3 flex space-x-2">
-                            <a href="{{ route('rooms.edit', $room) }}" class="text-blue-600 hover:underline">Edit</a>
-                            <form method="POST" action="{{ route('rooms.destroy', $room) }}" onsubmit="return confirm('Delete this room?');">
-                                @csrf @method('DELETE') <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                            </form>
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td class="p-3 font-bold text-gray-800">
+                            {{ $room->name }}
                         </td>
+
+                        <td class="p-3">
+                            {{ $room->building }}
+                            <span class="text-xs text-gray-500">(Floor {{ $room->floor }})</span>
+                        </td>
+
+                        <td class="p-3 text-center">{{ $room->capacity }}</td>
+
+                        <td class="p-3 text-center">
+                            <span class="px-2 py-1 text-xs font-bold rounded {{ $room->availability_status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                {{ ucfirst($room->availability_status) }}
+                            </span>
+                        </td>
+
+                        <td class="p-3 text-center">
+                            </td>
                     </tr>
                     @endforeach
                 </tbody>

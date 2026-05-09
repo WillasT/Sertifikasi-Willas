@@ -20,11 +20,6 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
         User::create([
             'name' => 'System Administrator',
             'email' => 'admin@gmail.com',
@@ -98,11 +93,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $rooms = [
-            ['building' => 'Main Building', 'floor' => '1', 'capacity' => 30, 'availability_status' => 'available'],
-            ['building' => 'Main Building', 'floor' => '2', 'capacity' => 60, 'availability_status' => 'available'],
-            ['building' => 'Main Building', 'floor' => '3', 'capacity' => 200, 'availability_status' => 'available'],
-            ['building' => 'Tower Building', 'floor' => '7', 'capacity' => 100, 'availability_status' => 'maintenance'],
-            ['building' => 'Tower Building', 'floor' => '12', 'capacity' => 50, 'availability_status' => 'available'],
+            ['name' => 'Plaza', 'building' => 'Main Building', 'floor' => '1', 'capacity' => 30, 'availability_status' => 'available'],
+            ['name' => 'Lounge', 'building' => 'Main Building', 'floor' => '2', 'capacity' => 60, 'availability_status' => 'available'],
+            ['name' => 'Laboratorium', 'building' => 'Main Building', 'floor' => '3', 'capacity' => 200, 'availability_status' => 'available'],
+            ['name' => 'Foundation', 'building' => 'Tower Building', 'floor' => '7', 'capacity' => 100, 'availability_status' => 'maintenance'],
+            ['name' => 'Theater', 'building' => 'Tower Building', 'floor' => '12', 'capacity' => 50, 'availability_status' => 'available'],
         ];
 
         foreach ($rooms as $room) {
