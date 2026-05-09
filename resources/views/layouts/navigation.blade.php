@@ -19,6 +19,13 @@
                         <x-nav-link :href="route('borrowers.index')" :active="request()->routeIs('borrowers.*')">
                             {{ __('Borrowers') }}
                         </x-nav-link>
+
+                        <x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')">
+                            {{ __('Rooms') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('equipments.index')" :active="request()->routeIs('equipments.*')">
+                            {{ __('Equipment') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -78,6 +85,13 @@
             @if (Auth::user()->account_type === 'admin')
                 <x-responsive-nav-link :href="route('borrowers.index')" :active="request()->routeIs('borrowers.*')">
                     {{ __('Borrowers') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')">
+                    {{ __('Rooms') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('equipments.index')" :active="request()->routeIs('equipments.*')">
+                    {{ __('Equipment') }}
                 </x-responsive-nav-link>
             @endif
         </div>
