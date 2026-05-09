@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('identity_number')->unique()->comment('NIM for students, NIK for lecturers');
+            $table->string('phone_number')->nullable();
+            $table->enum('account_type', ['student', 'lecturer', 'admin'])->default('student');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
