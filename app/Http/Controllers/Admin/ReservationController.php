@@ -28,6 +28,14 @@ class ReservationController extends Controller
         return view('admin.reservations.index', compact('reservations'));
     }
 
+    public function show(Reservation $reservation)
+    {
+        // Load all the necessary details
+        $reservation->load(['user', 'room', 'equipment']);
+
+        return view('admin.reservations.show', compact('reservation'));
+    }
+
     // 2. Approve the reservation
     public function approve(Reservation $reservation)
     {

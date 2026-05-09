@@ -36,7 +36,8 @@
                                 <th class="p-3">Schedule</th>
                                 <th class="p-3">Room & Details</th>
                                 <th class="p-3">Equipment Required</th>
-                                <th class="p-3 text-center">Status / Actions</th>
+                                <th class="p-3 text-center">Status</th>
+                                <th class="p-3 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,63 +80,29 @@
                                 </td>
 
                                 <td class="p-3 text-center">
-                                    @if($reservation->status === 'pending')
-                                        <div class="flex flex-col space-y-2 items-center">
-                                            <form method="POST" action="{{ route('admin.reservations.approve', $reservation->id) }}">
-                                                @csrf @method('PATCH')
-                                                <button type="submit" class="w-24 bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-green-700">APPROVE</button>
-                                            </form>
+                                    @php
+                                        $badgeColors = [
+                                            'pending' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                            'approved' => 'bg-green-100 text-green-800 border-green-200',
+                                            'rejected' => 'bg-red-100 text-red-800 border-red-200',
+                                            'done' => 'bg-blue-100 text-blue-800 border-blue-200',
+                                        ];
+                                        $colorClass = $badgeColors[$reservation->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                                    @endphp
+                                    <span class="px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider {{ $colorClass }}">
+                                        {{ $reservation->status }}
+                                    </span>
+                                </td>
 
-                                            <form method="POST" action="{{ route('admin.reservations.reject', $reservation->id) }}" onsubmit="return confirm('Are you sure you want to reject this request?');">
-                                                @csrf @method('PATCH')
-                                                <button type="submit" class="w-24 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-red-700">REJECT</button>
-                                            </form>
-                                        </div>
-
-                                        @elseif($reservation->status === 'approved')
-                                        <div class="flex flex-col space-y-2 items-center">
-                                            <span class="px-2 py-1 rounded text-xs font-bold uppercase bg-green-100 text-green-700 mb-2">
-                                                Approved
-                                            </span>
-
-                                            @php
-                                                // Calculate the exact end time of the reservation
-                                                $endTime = \Carbon\Carbon::parse($reservation->usage_date)->addHours($reservation->duration_hours);
-                                            @endphp
-
-                                            @if($endTime->isPast())
-                                                <form method="POST" action="{{ route('admin.reservations.done', $reservation->id) }}" onsubmit="return confirm('Confirm room/equipment has been returned safely?');">
-                                                    @csrf @method('PATCH')
-                                                    <button type="submit" class="w-24 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-blue-700">MARK DONE</button>
-                                                </form>
-                                            @else
-                                                <div class="text-[10px] text-gray-500 text-center italic mt-1 leading-tight">
-                                                    In Progress / Upcoming<br>
-                                                    <span class="font-semibold">Ends: {{ $endTime->format('M d, h:i A') }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                    @else
-                                        <div class="flex flex-col items-center">
-                                            <span class="px-2 py-1 rounded text-xs font-bold uppercase
-                                                {{ $reservation->status === 'done' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                                                {{ $reservation->status }}
-                                            </span>
-
-                                            @if($reservation->status === 'done' && $reservation->returned_at)
-                                                <div class="text-[10px] text-gray-500 mt-2">
-                                                    Returned:<br>
-                                                    {{ $reservation->returned_at->format('M d, h:i A') }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
+                                <td class="p-3 text-center">
+                                    <a href="{{ route('admin.reservations.show', $reservation->id) }}" class="inline-block bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded hover:bg-indigo-700 transition shadow-sm">
+                                        DETAILS
+                                    </a>
                                 </td>
 
                             </tr>
                             @empty
-                            <tr><td colspan="5" class="p-4 text-center text-gray-500">No reservations found.</td></tr>
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">No reservations found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

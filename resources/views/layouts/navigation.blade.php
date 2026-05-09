@@ -12,12 +12,6 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
-                        {{ __('My Reservations') }}
-                    </x-nav-link>
                     @if (Auth::user()->account_type === 'admin')
                         <x-nav-link :href="route('admin.reservations.index')" :active="request()->routeIs('admin.reservations.*')">
                             {{ __('Approvals') }}
@@ -31,6 +25,10 @@
                         </x-nav-link>
                         <x-nav-link :href="route('equipments.index')" :active="request()->routeIs('equipments.*')">
                             {{ __('Equipment') }}
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
+                            {{ __('My Reservations') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -85,19 +83,22 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
             @if (Auth::user()->account_type === 'admin')
+                <x-responsive-nav-link :href="route('admin.reservations.index')" :active="request()->routeIs('admin.reservations.*')">
+                    {{ __('Approvals') }}
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('borrowers.index')" :active="request()->routeIs('borrowers.*')">
                     {{ __('Borrowers') }}
                 </x-responsive-nav-link>
-
                 <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')">
                     {{ __('Rooms') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('equipments.index')" :active="request()->routeIs('equipments.*')">
                     {{ __('Equipment') }}
+                </x-responsive-nav-link>
+            @else
+                <x-responsive-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
+                    {{ __('My Reservations') }}
                 </x-responsive-nav-link>
             @endif
         </div>
