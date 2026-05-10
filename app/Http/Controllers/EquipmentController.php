@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Equipment;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class EquipmentController extends Controller
 {
@@ -13,10 +14,17 @@ class EquipmentController extends Controller
      */
     public function index()
     {
-        $equipments = Equipment::latest()->get();
-        return view('equipments.index', compact('equipments'));
-    }
+        // Fetch all items, ordered nicely
+        $allEquipment = Equipment::orderBy('category')->orderBy('name')->get();
 
+        // Group the collection by a combination of Name, Category, and Status
+        // This keeps "Available Projectors" separate from "Broken Projectors"
+        $groupedEquipments = $allEquipment->groupBy(function ($item) {
+            return $item->name . '|' . $item->category . '|' . $item->status;
+        });
+
+        return view('equipments.index', compact('groupedEquipments'));
+    }
     /**
      * Show the form for creating a new resource.
      */
