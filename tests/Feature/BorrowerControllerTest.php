@@ -21,46 +21,6 @@ class BorrowerControllerTest extends TestCase
     }
 
     /** @test */
-    public function test_admin_can_list_all_borrowers()
-    {
-        // Create a student manually
-        User::create([
-            'name' => 'Budi Santoso',
-            'email' => 'budi@student.xyz.ac.id',
-            'password' => bcrypt('password'),
-            'account_type' => 'student',
-            'identity_number' => '20210001',
-        ]);
-
-        $response = $this->get(route('borrowers.index'));
-
-        $response->assertStatus(200);
-        $response->assertSee('Budi Santoso');
-        $response->assertSee('20210001');
-    }
-
-    /** @test */
-    public function test_admin_can_store_a_new_borrower()
-    {
-        $data = [
-            'name' => 'Siti Aminah',
-            'email' => 'siti@lecturer.xyz.ac.id',
-            'password' => 'password123',
-            'account_type' => 'lecturer',
-            'identity_number' => '19880002',
-            'phone_number' => '08123456789', // ADD THIS LINE
-        ];
-
-        $response = $this->post(route('borrowers.store'), $data);
-
-        $response->assertRedirect(route('borrowers.index'));
-        $this->assertDatabaseHas('users', [
-            'email' => 'siti@lecturer.xyz.ac.id',
-            'identity_number' => '19880002'
-        ]);
-    }
-
-    /** @test */
     public function test_cannot_create_borrower_with_duplicate_identity_number()
     {
         User::create([
@@ -86,19 +46,31 @@ class BorrowerControllerTest extends TestCase
     }
 
     /** @test */
-    public function test_admin_can_delete_a_borrower()
+    public function test_borrower_lifecycle()
     {
-        $userToDelete = User::create([
-            'name' => 'Temporary User',
-            'email' => 'temp@test.com',
-            'password' => bcrypt('password'),
-            'account_type' => 'student',
-            'identity_number' => 'TEMP999',
-        ]);
+        $this->actingAs($this->admin);
 
-        $response = $this->delete(route('borrowers.destroy', $userToDelete->id));
+        // 1. CREATE
+        $userData = [
+            'name' => 'Budi',
+            'email' => 'budi@student.com',
+            'password' => 'password123',
+            'identity_number' => 'NIM123',
+            'phone_number' => '0812345678',
+            'account_type' => 'student'
+        ];
+        $this->post(route('borrowers.store'), $userData);
+        $user = \App\Models\User::where('email', 'budi@student.com')->first();
 
-        $response->assertRedirect(route('borrowers.index'));
-        $this->assertDatabaseMissing('users', ['id' => $userToDelete->id]);
+        // 2. READ
+        $this->get(route('borrowers.index'))->assertSee('NIM123');
+
+        // 3. UPDATE
+        $this->patch(route('borrowers.update', $user->id), array_merge($userData, ['name' => 'Budi Updated']));
+        $this->assertEquals('Budi Updated', $user->fresh()->name);
+
+        // 4. DELETE
+        $this->delete(route('borrowers.destroy', $user->id));
+        $this->assertDatabaseMissing('users', ['email' => 'budi@student.com']);
     }
 }

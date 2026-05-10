@@ -52,32 +52,79 @@ class ReservationController extends Controller
             'equipment_requests' => 'nullable|array',
         ]);
 
-        // 1. Prepare requested times
         $requestedStart = Carbon::parse($validated['reservation_date'] . ' ' . $validated['start_time']);
         $startTime = Carbon::parse($validated['start_time']);
         $endTime = Carbon::parse($validated['end_time']);
         $durationHours = max(1, $startTime->diffInHours($endTime));
         $requestedEnd = (clone $requestedStart)->addHours($durationHours);
 
-        // 2. Check for Overlapping Reservations (ONLY APPROVED ONES)
+        // 1. Check for Room Overlaps
         $conflict = Reservation::where('room_id', $validated['room_id'])
-        ->where('status', 'approved') // <-- CHANGED THIS LINE
-        ->where(function ($query) use ($requestedStart, $requestedEnd) {
-            $query->where('usage_date', '<', $requestedEnd)
-                ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
-        })->first();
+            ->where('status', 'approved')
+            ->where(function ($query) use ($requestedStart, $requestedEnd) {
+                $query->where('usage_date', '<', $requestedEnd)
+                    ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
+            })->first();
 
         if ($conflict) {
-            if ($conflict->user_id == Auth::id()) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error_link', route('reservations.edit', $conflict->id))
-                    ->with('error', 'You already have a reservation for this room at this time.');
-            }
-            return redirect()->back()->withInput()->with('error', 'This room is already booked or requested by someone else during this time.');
+            return redirect()->back()->withInput()->with('error', 'This room is already booked.');
         }
 
-        // 3. Save the Reservation (Normal Flow)
+        $idsToAttach = [];
+        $totalRequestedCount = 0;
+
+        // 2. Equipment Availability Logic
+        if (!empty($validated['equipment_requests'])) {
+
+            // Find busy equipment during this time slot
+            $busyEquipmentIds = DB::table('equipment_reservation')
+                ->whereIn('reservation_id', function ($query) use ($requestedStart, $requestedEnd) {
+                    $query->select('id')->from('reservations')
+                        ->where('status', 'approved')
+                        ->where('usage_date', '<', $requestedEnd)
+                        ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
+                })->pluck('equipment_id')->toArray();
+
+            // Inside the foreach loop of your store method
+            foreach ($validated['equipment_requests'] as $itemName => $quantity) {
+                if ($quantity > 0) {
+                    $totalRequestedCount += $quantity;
+
+                    // 1. Get TOTAL physical items with this name that are 'available' (not in maintenance)
+                    $totalPhysicalItems = \App\Models\Equipment::where('name', $itemName)
+                        ->where('status', 'available')
+                        ->pluck('id')
+                        ->toArray();
+
+                    // 2. Find which of THESE specific IDs are busy during this time
+                    $busyIdsForThisItem = DB::table('equipment_reservation')
+                        ->whereIn('equipment_id', $totalPhysicalItems)
+                        ->whereIn('reservation_id', function ($query) use ($requestedStart, $requestedEnd) {
+                            $query->select('id')->from('reservations')
+                                ->where('status', 'approved') // Only count confirmed ones
+                                ->where('usage_date', '<', $requestedEnd)
+                                ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
+                        })->pluck('equipment_id')->toArray();
+
+                    // 3. Calculate "Real" available IDs
+                    $actuallyAvailableIds = array_diff($totalPhysicalItems, $busyIdsForThisItem);
+
+                    // 4. Take only what is needed
+                    $availableToAttach = array_slice($actuallyAvailableIds, 0, $quantity);
+
+                    $idsToAttach = array_merge($idsToAttach, $availableToAttach);
+                }
+            }
+
+            // --- THE FIX: STRICT STOCK CHECK ---
+            if (count($idsToAttach) < $totalRequestedCount) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Some requested equipment is unavailable for this time slot. Please reduce the quantity or change the time.');
+            }
+        }
+
+        // 3. Save only if all checks pass
         $reservation = Reservation::create([
             'user_id' => Auth::id(),
             'room_id' => $validated['room_id'],
@@ -88,31 +135,7 @@ class ReservationController extends Controller
             'status' => 'pending',
         ]);
 
-        if (!empty($validated['equipment_requests'])) {
-            $idsToAttach = [];
-
-            // Get IDs of equipment already busy during this time (ONLY APPROVED ONES)
-            $busyEquipmentIds = DB::table('equipment_reservation')
-                ->whereIn('reservation_id', function ($query) use ($requestedStart, $requestedEnd) {
-                    $query->select('id')->from('reservations')
-                        ->where('status', 'approved') // <-- CHANGED THIS LINE
-                        ->where('usage_date', '<', $requestedEnd)
-                        ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
-                })->pluck('equipment_id')->toArray();
-
-            foreach ($validated['equipment_requests'] as $itemName => $quantity) {
-                if ($quantity > 0) {
-                    // Grab available IDs that are NOT in the busy list
-                    $availableIds = \App\Models\Equipment::where('name', $itemName)
-                        ->where('status', 'available')
-                        ->whereNotIn('id', $busyEquipmentIds)
-                        ->take($quantity)
-                        ->pluck('id')
-                        ->toArray();
-
-                    $idsToAttach = array_merge($idsToAttach, $availableIds);
-                }
-            }
+        if (!empty($idsToAttach)) {
             $reservation->equipment()->attach($idsToAttach);
         }
 
@@ -170,7 +193,7 @@ class ReservationController extends Controller
             ->whereIn('status', ['pending', 'approved'])
             ->where(function ($query) use ($requestedStart, $requestedEnd) {
                 $query->where('usage_date', '<', $requestedEnd)
-                      ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
+                    ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
             })->first();
 
         if ($conflict) {
@@ -206,53 +229,55 @@ class ReservationController extends Controller
         return redirect()->route('reservations.index')->with('status', 'Reservation updated successfully!');
     }
 
+    public function destroy(Reservation $reservation)
+    {
+        // Optional: Only allow deletion if status is 'pending'
+        $reservation->delete();
+        return redirect()->route('reservations.index')->with('success', 'Reservation cancelled.');
+    }
+
     public function checkAvailableEquipment(Request $request)
     {
-        // 1. Get the requested times
         $date = $request->query('date');
         $start = $request->query('start');
         $end = $request->query('end');
 
         if (!$date || !$start || !$end) return response()->json([]);
 
-        $requestedStart = \Carbon\Carbon::parse($date . ' ' . $start);
-        $startTime = \Carbon\Carbon::parse($start);
-        $endTime = \Carbon\Carbon::parse($end);
-        $durationHours = max(1, $startTime->diffInHours($endTime));
-        $requestedEnd = (clone $requestedStart)->addHours($durationHours);
+        $requestedStart = Carbon::parse($date . ' ' . $start);
+        $requestedEnd = Carbon::parse($date . ' ' . $end);
 
-        $overlappingReservations = Reservation::with('equipment')
-            ->where('status', 'approved')
-            ->where(function ($query) use ($requestedStart, $requestedEnd) {
-                $query->where('usage_date', '<', $requestedEnd)
-                      ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
-            })->get();
+        // 1. Get IDs of equipment currently tied to APPROVED reservations during this time
+        $busyEquipmentIds = DB::table('equipment_reservation')
+            ->whereIn('reservation_id', function ($query) use ($requestedStart, $requestedEnd) {
+                $query->select('id')->from('reservations')
+                    ->where('status', 'approved')
+                    ->where('usage_date', '<', $requestedEnd)
+                    ->whereRaw('DATE_ADD(usage_date, INTERVAL duration_hours HOUR) > ?', [$requestedStart]);
+            })->pluck('equipment_id')->toArray();
 
+        // 2. Get all physical items that are NOT in maintenance
         $allEquipment = \App\Models\Equipment::where('status', 'available')->get();
-        $groupedEquipment = [];
 
-        foreach ($allEquipment as $eq) {
-            if (!isset($groupedEquipment[$eq->category])) $groupedEquipment[$eq->category] = [];
-            if (!isset($groupedEquipment[$eq->category][$eq->name])) $groupedEquipment[$eq->category][$eq->name] = 0;
-            $groupedEquipment[$eq->category][$eq->name]++;
-        }
+        // 3. Group them by category and name, but subtract the busy ones
+        $availability = [];
 
-        foreach ($overlappingReservations as $res) {
-            foreach ($res->equipment as $eq) {
-                if (isset($groupedEquipment[$eq->category][$eq->name])) {
-                    $groupedEquipment[$eq->category][$eq->name]--;
-                }
+        foreach ($allEquipment as $item) {
+            if (!isset($availability[$item->category])) {
+                $availability[$item->category] = [];
+            }
+
+            if (!isset($availability[$item->category][$item->name])) {
+                $availability[$item->category][$item->name] = 0;
+            }
+
+            // Only count this specific item if its ID is NOT busy
+            if (!in_array($item->id, $busyEquipmentIds)) {
+                $availability[$item->category][$item->name]++;
             }
         }
 
-        foreach ($groupedEquipment as $cat => $items) {
-            foreach ($items as $name => $qty) {
-                if ($qty <= 0) unset($groupedEquipment[$cat][$name]);
-            }
-            if (empty($groupedEquipment[$cat])) unset($groupedEquipment[$cat]);
-        }
-
-        return response()->json($groupedEquipment);
+        return response()->json($availability);
     }
 
     public function getBookedTimes(Request $request)

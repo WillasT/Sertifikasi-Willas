@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reservations/booked-times', [ReservationController::class, 'getBookedTimes']);
 
     Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])->name('reservations.edit');
+    Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
     Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('reservations.update');
 });
 
